@@ -1,0 +1,39 @@
+# Dependencias y entornos
+node_modules/
+sigma_api/venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Builds
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Variables de entorno (no subir: contienen URLs/secretos)
+.env
+.env.*
+!.env.example
+
+# Backup del .git original de esta copia
+.git-old-backup/
+
+# Secretos y contraseñas
+Supabase/Contraseña_DB.txt
+
+# Datos/registros en tiempo de ejecución
+sensor_backup.txt
+*.log
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

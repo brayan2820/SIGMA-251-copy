@@ -1,0 +1,219 @@
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+
+const parseMeasurementTimestamp = (timestamp) => {
+  if (typeof timestamp !== 'string') return new Date(timestamp)
+
+  // Las filas antiguas de Supabase se guardaron como TIMESTAMP sin zona. En
+  // produccion esas marcas representan UTC, por lo que se agrega Z antes de
+  // convertirlas para no interpretarlas equivocadamente como hora local.
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestamp)
+  return new Date(hasTimezone ? timestamp : `${timestamp}Z`)
+}
+
+function RealTimeChart({ historicalData, syncedHistoryDate, timeRange, onTimeRangeChange }) {
+  // Opciones de tiempo
+  const timeOptions = [
+    { value: 1, label: '1 Hora' },
+    { value: 6, label: '6 Horas' },
+    { value: 24, label: '24 Horas' }
+  ]
+
+  // Si no hay datos históricos o no es array, mostrar mensaje
+  if (!historicalData || !Array.isArray(historicalData) || historicalData.length === 0) {
+    return (
+      <div className="chart-container">
+        <div className="chart-header">
+          <h2>Registro Histórico</h2>
+        </div>
+        <div className="no-data">
+          <p>No hay datos disponibles</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Procesar datos para Recharts - versión SEGURA
+  const processChartData = () => {
+    const dataByTime = {}
+    const sensorKeyMap = {
+      temperatura: 'temperatura',
+      humedad: 'humedad',
+      radiacion_solar: 'radiacion_solar',
+      humedad_suelo: 'humedad_suelo'
+    }
+    
+    // Usar forEach solo si es array
+    historicalData.forEach(item => {
+      if (!item) return; // Saltar items null
+
+      const rawDate = parseMeasurementTimestamp(item.timestamp)
+      if (Number.isNaN(rawDate.getTime())) return
+
+      // Agrupar por segundo para no perder lecturas distintas que comparten el mismo minuto
+      const timeKey = rawDate.toISOString().slice(0, 19)
+      const time = rawDate.toLocaleString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Bogota'
+      })
+
+      if (!dataByTime[timeKey]) {
+        dataByTime[timeKey] = { time, timeKey }
+      }
+
+      if (item.sensor && Object.prototype.hasOwnProperty.call(item, 'valor')) {
+        const key = sensorKeyMap[item.sensor] || item.sensor
+        dataByTime[timeKey][key] = item.valor ?? 0
+      } else {
+        // Usar valores directamente (sin .sensor ni .valor)
+        dataByTime[timeKey].temperatura = item.temperatura ?? null
+        dataByTime[timeKey].humedad = item.humedad ?? null
+        dataByTime[timeKey].radiacion_solar = item.radiacion_solar ?? null
+        dataByTime[timeKey].humedad_suelo = item.humedad_suelo ?? null
+      }
+    })
+    
+    return Object.values(dataByTime).sort((a, b) => a.timeKey.localeCompare(b.timeKey))
+  }
+
+  const chartData = processChartData()
+
+  // Si después de procesar no hay datos
+  if (chartData.length === 0) {
+    return (
+      <div className="chart-container">
+        <div className="chart-header">
+          <h2>Registro Histórico</h2>
+        </div>
+        <div className="no-data">
+          <p>No hay datos para mostrar</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="chart-container">
+      <div className="chart-header">
+        <h2>Registro Histórico</h2>
+        {syncedHistoryDate && (
+          <span className="sync-history-label">
+            Datos sincronizados: {syncedHistoryDate}
+          </span>
+        )}
+        <div className="time-filters">
+          {timeOptions.map(option => (
+            <button
+              key={option.value}
+              className={`time-filter ${timeRange === option.value ? 'active' : ''}`}
+              onClick={() => onTimeRangeChange(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="chart-with-axis-labels">
+        <div className="chart-axis-labels chart-axis-labels-left" aria-label="Variables del eje izquierdo">
+          <div className="chart-axis-labels-left-group">
+            <span className="chart-axis-label" style={{ color: '#ff6b6b' }}>
+              Temperatura (°C)
+            </span>
+            <span className="chart-axis-label" style={{ color: '#4ecdc4' }}>
+              Humedad (%)
+            </span>
+          </div>
+          <span className="chart-axis-label" style={{ color: '#6c5ce7' }}>
+            Tensión agua suelo (cbar)
+          </span>
+        </div>
+
+        <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 25 }}>
+          <CartesianGrid yAxisId="left" strokeDasharray="3 3" stroke="#333" />
+          <XAxis 
+            dataKey="time" 
+            stroke="#9e9e9e"
+            fontSize={12}
+            height={40}
+            label={{
+              value: 'Fecha y hora',
+              position: 'bottom',
+              offset: 0,
+              fill: '#9e9e9e',
+              fontSize: 12
+            }}
+          />
+          <YAxis
+            yAxisId="left"
+            stroke="#cbd5e1"
+            tick={{ fill: '#cbd5e1', fontSize: 12 }}
+            width={44}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            stroke="#ffd93d"
+            tick={{ fill: '#ffd93d', fontSize: 12 }}
+            width={36}
+          />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: '#1e1e1e', 
+              border: '1px solid #333',
+              borderRadius: '8px'
+            }}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="temperatura" 
+            yAxisId="left"
+            stroke="#ff6b6b" 
+            name="Temperatura (°C)" 
+            strokeWidth={2}
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="humedad" 
+            yAxisId="left"
+            stroke="#4ecdc4" 
+            name="Humedad (%)" 
+            strokeWidth={2}
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="radiacion_solar"
+            yAxisId="right"
+            stroke="#ffd93d" 
+            name="Radiacion solar (W/m²)"
+            strokeWidth={2}
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="humedad_suelo" 
+            yAxisId="left"
+            stroke="#6c5ce7" 
+            name="Tension Agua Suelo (cbar)"
+            strokeWidth={2}
+            dot={false}
+          />
+        </LineChart>
+        </ResponsiveContainer>
+
+        <div className="chart-axis-labels chart-axis-labels-right" aria-label="Variable del eje derecho">
+          <span className="chart-axis-label" style={{ color: '#ffd93d' }}>
+            Radiación solar (W/m²)
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default RealTimeChart

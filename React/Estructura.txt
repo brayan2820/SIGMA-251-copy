@@ -1,0 +1,81 @@
+my-app/
+├── src/
+│   ├── components/
+│   │   ├── Admin/
+│   │   │   ├── UserDeleteModal.jsx
+│   │   │   ├── UserForm.jsx
+│   │   │   ├── UserList.jsx
+│   │   │   └── UserManagement.jsx
+│   │   ├── Auth/
+│   │   │   ├── Login.jsx
+│   │   │   └── Register.jsx
+│   │   ├── Dashboard/
+│   │   │   ├── BatteryIcon.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── MetricCard.jsx
+│   │   │   ├── OfflineStorageIndicator.jsx
+│   │   │   ├── RealTimeChart.jsx
+│   │   │   └── StorageLevel.jsx
+│   │   ├── Layout/
+│   │   │   ├── Header.jsx
+│   │   │   ├── MainLayout.jsx
+│   │   │   ├── NavigationSidebar.jsx
+│   │   │   └── StatusSidebar.jsx
+│   │   └── Settings/
+│   │       ├── ChangeEmailModal.jsx
+│   │       ├── ChangePasswordModal.jsx
+│   │       └── Settings.jsx
+│   ├── hooks/
+│   │   ├── 
+│   │   ├── useLocalSensorData.jsx
+│   │   ├── useOfflineStorageStatus.jsx
+│   │   ├── useSensorData.jsx
+│   │   ├── useXBeeSerial.jsx
+│   │   └── 
+│   ├── services/
+│   │   ├── api.jsx
+│   │   ├── offlineService.jsx
+│   │   └── serialService.jsx
+│   ├── styles/
+│   │   ├── Admin.css
+│   │   ├── Auth.css
+│   │   ├── Dashboard.css
+│   │   ├── globals.css
+│   │   ├── index.css
+│   │   ├── Layout.css
+│   │   └── Settings.css
+│   ├── utils/
+│   │   ├── 
+│   │   └── theme.jsx
+│   ├── App.jsx
+│   └── main.jsx
+
+
+Resumida
+
+src/
+├── components/
+│   ├── Auth/
+│   ├── Admin/
+│   ├── Dashboard/
+│   ├── Layout/
+│   └── Settings/
+├── hooks/
+├── services/
+├── styles/
+├── utils/
+├── App.jsx
+└── main.jsx
+
+
+
+
+    Filtros en gráfica - Selector de rango de tiempo (1h, 6h, 24h)
+
+    Animaciones/mejoras visuales - Efectos hover, transiciones suaves
+
+    Manejo de errores mejorado - Estados específicos por componente
+
+    Optimizaciones - Loading skeletons, lazy loadingspecíficos
+
+

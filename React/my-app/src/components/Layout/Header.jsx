@@ -1,0 +1,112 @@
+// src/components/Layout/Header.jsx
+import { useEffect, useState } from 'react';
+import '../../styles/index.css';
+import OfflineStorageIndicator from '../Dashboard/OfflineStorageIndicator.jsx';
+import BatteryIcon from '../Dashboard/BatteryIcon.jsx'; // ← nuevo
+
+function Header({ onToggleSidebar, onManualMeasure, batteryData, serial }) {
+  const [isOnline, setIsOnline] = useState(true);
+  const batteryPercentage = batteryData?.bateria ?? 0; // valor seguro
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (typeof navigator === 'undefined' || !navigator.onLine) {
+        setIsOnline(false);
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+
+      try {
+        await fetch('https://www.gstatic.com/generate_204', {
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        setIsOnline(true);
+      } catch {
+        setIsOnline(false);
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    };
+
+    const updateStatus = () => {
+      setIsOnline(typeof navigator !== 'undefined' ? navigator.onLine : true);
+      checkConnection();
+    };
+
+    updateStatus();
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+
+    const intervalId = window.setInterval(updateStatus, 3000);
+
+    return () => {
+      window.removeEventListener('online', updateStatus);
+      window.removeEventListener('offline', updateStatus);
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  return (
+    <header className="header">
+      <div className="header-left">
+        <button className="hamburger-menu" onClick={onToggleSidebar}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div className="logo">
+          <div className="logo-horizontal">
+            <img
+              src="/logo.png"
+              alt="SIGMA - Sistema de Monitoreo Ambiental"
+              className="logo-icon"
+            />
+            <div className="logo-text">
+              <h1>SIGMA</h1>
+              <span>Sistema de Monitoreo Ambiental</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="header-center">
+        <div className={`system-status ${isOnline ? 'online' : 'offline'}`} aria-live="polite" title="Estado de conexión">
+          <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`}></span>
+          <span>{isOnline ? 'Online' : 'Offline'}</span>
+        </div>
+        <div
+          className={`system-status ${serial?.connected ? 'online' : 'offline'}`}
+          aria-live="polite"
+          title={serial?.lastLine || serial?.error || 'Estado del enlace XBee'}
+        >
+          <span className={`status-indicator ${serial?.connected ? 'online' : 'offline'}`}></span>
+          <span>{serial?.connected ? 'XBee conectado' : 'XBee sin conectar'}</span>
+        </div>
+      </div>
+
+      <div className="header-right">
+        <div className="header-actions">
+          <OfflineStorageIndicator compact={true} />
+
+          <div className="battery-header-indicator" title={`Batería: ${batteryPercentage}%`}>
+            <BatteryIcon percentage={batteryPercentage} width={16} height={20} />
+            <span className="storage-percent">{Math.round(batteryPercentage)}%</span>
+          </div>
+
+          <button className="manual-measure-button" onClick={onManualMeasure}>
+            Medir ahora
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default Header;
