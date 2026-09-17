@@ -261,11 +261,15 @@ async def obtener_ultimas_mediciones(db: Session = Depends(get_db)):
 async def obtener_mediciones_historicas(
     horas: int = Query(24, description="Número de horas hacia atrás"),
     fecha: str = Query(None, description="Fecha local de Colombia en formato YYYY-MM-DD"),
+    hora: int = Query(None, ge=0, le=23, description="Hora local de Colombia (0-23). Requiere el parámetro fecha."),
     sensor: str = Query(None, description="Tipo de sensor (temperatura, humedad, etc)"),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene mediciones históricas para gráficos
+    Obtiene mediciones históricas para gráficos.
+    - Con 'fecha' consulta un día completo (zona horaria Colombia UTC-5).
+    - Con 'fecha' + 'hora' consulta únicamente esa hora del día.
+    - Con 'sensor' filtra por una sola variable.
     """
     try:
         if fecha:
@@ -278,11 +282,22 @@ async def obtener_mediciones_historicas(
             start_time = datetime.combine(selected_date, datetime.min.time(), tzinfo=colombia_timezone)
             start_time = start_time.astimezone(timezone.utc).replace(tzinfo=None)
             end_time = start_time + timedelta(days=1)
+
+            if hora is not None:
+                start_time = start_time + timedelta(hours=hora)
+                end_time = start_time + timedelta(hours=1)
+
             query = db.query(Medicion).filter(
                 Medicion.timestamp >= start_time,
                 Medicion.timestamp < end_time
             )
         else:
+            if hora is not None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="El parámetro hora requiere especificar una fecha (fecha=YYYY-MM-DD)"
+                )
+
             # Calcular timestamp de inicio para los filtros normales 1/6/24 h.
             start_time = datetime.now() - timedelta(hours=horas)
             end_time = None
@@ -291,7 +306,12 @@ async def obtener_mediciones_historicas(
             )
         
         # Filtrar por sensor si se especifica
-        if sensor and sensor in SENSOR_MAPPING:
+        if sensor:
+            if sensor not in SENSOR_MAPPING:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Sensor '{sensor}' no válido. Opciones: {', '.join(SENSOR_MAPPING.keys())}"
+                )
             sensor_id = SENSOR_MAPPING[sensor]
             query = query.filter(Medicion.sensor_id == sensor_id)
         
@@ -314,6 +334,7 @@ async def obtener_mediciones_historicas(
             "filtros": {
                 "horas": horas,
                 "fecha": fecha,
+                "hora": hora,
                 "sensor": sensor,
                 "desde": start_time.isoformat(),
                 "hasta": end_time.isoformat() if end_time else None

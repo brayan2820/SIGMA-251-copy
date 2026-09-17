@@ -39,11 +39,20 @@ export const saveMedicionOffline = async (medicion, options = {}) => {
       mediciones.push(record);
     }
 
-    if (mediciones.length > MAX_OFFLINE_MEDICIONES) {
-      mediciones.splice(0, mediciones.length - MAX_OFFLINE_MEDICIONES);
+    let medicionesPersistir = mediciones;
+    if (medicionesPersistir.length > MAX_OFFLINE_MEDICIONES) {
+      // Solo se descartan del cache local las mediciones que ya fueron
+      // sincronizadas con la nube. Las pendientes nunca se borran para no
+      // perder datos capturados sin conexion.
+      const excedente = medicionesPersistir.length - MAX_OFFLINE_MEDICIONES;
+      const yaSincronizadas = medicionesPersistir.filter((item) => item.synced === true);
+      if (yaSincronizadas.length >= excedente) {
+        const idsAEliminar = new Set(yaSincronizadas.slice(0, excedente).map((item) => item.id));
+        medicionesPersistir = medicionesPersistir.filter((item) => !idsAEliminar.has(item.id));
+      }
     }
 
-    await localForage.setItem('mediciones', mediciones);
+    await localForage.setItem('mediciones', medicionesPersistir);
     emitStorageUpdate();
     return record;
   } catch (error) {

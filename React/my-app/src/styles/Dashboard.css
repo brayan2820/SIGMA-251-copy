@@ -351,6 +351,81 @@
   box-shadow: 0 6px 18px rgba(95, 194, 201, 0.22);
 }
 
+/* ===== FILTROS DE HISTORICO POR DIA / HORA / VARIABLE ===== */
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.55);
+  border: 1px solid #374151;
+  border-radius: 10px;
+}
+
+.history-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.history-filter-field span,
+.history-filter-label {
+  color: #9ca3af;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.history-filter-field input,
+.history-filter-field select {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  min-width: 150px;
+}
+
+.history-filter-field input:focus,
+.history-filter-field select:focus {
+  outline: none;
+  border-color: #5fc2c9;
+}
+
+.history-sensor-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.history-sensor-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.history-sensor-check input {
+  accent-color: #10b981;
+}
+
+.chart-note {
+  margin-bottom: 1rem;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.chart-note.warning {
+  color: #fbbf24;
+}
+
 /* ===== LOADING & ERROR STATES ===== */
 .loading-container,
 .error-container {
@@ -568,6 +643,27 @@
   background: #f8fafc;
   color: #334155;
   border-color: #d1d5db;
+}
+
+.theme-light .history-filters {
+  background: #f8fafc;
+  border-color: #e5e7eb;
+}
+
+.theme-light .history-filter-field span,
+.theme-light .history-filter-label {
+  color: #64748b;
+}
+
+.theme-light .history-filter-field input,
+.theme-light .history-filter-field select {
+  background: #ffffff;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.theme-light .chart-note {
+  color: #64748b;
 }
 
 .theme-light .metric-card {

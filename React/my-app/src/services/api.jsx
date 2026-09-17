@@ -135,6 +135,19 @@ export const api = {
       cache: 'no-store',
     }),
 
+  getHistoricalDataByFilters: async ({ fecha, hora, sensor } = {}) => {
+    const params = new URLSearchParams();
+    if (fecha) params.set('fecha', fecha);
+    if (hora !== undefined && hora !== null && hora !== '') params.set('hora', String(hora));
+    if (sensor) params.set('sensor', sensor);
+
+    const query = params.toString();
+    return fetchWithAuth(
+      `${API_BASE}/api/mediciones/waspmote/historical${query ? `?${query}` : ''}`,
+      { cache: 'no-store' }
+    );
+  },
+
   postWaspmoteMeasurement: async (measurementData) =>
     fetchWithAuth(`${API_BASE}/api/mediciones/waspmote`, {
       method: 'POST',
